@@ -2006,11 +2006,12 @@ function statoMemoria(){
   if(st==='pieno') return {cls:'bad', t:'Spazio online esaurito', az:'Vedi'};
   if(st==='erroreSalvataggio') return {cls:'bad', t:'Salvataggio non riuscito, riprovo…', az:'Riprova'};
   if(LS_OK===false) return {cls:'bad', t:DA_FILE?'File scaricato: NON salva niente':'I dati NON vengono salvati', az:'Risolvi'};
+  if(PERSISTE===null) return {cls:'work', t:'Prima apertura: chiudi e riapri per verificare la memoria', az:'Spiega'};
   if(PERSISTE===true) return DENTRO_CLAUDE
     ? {cls:'ok', t:'Salvato sul telefono'+(ULTIMO_SALVA?' · '+oraBreve(ULTIMO_SALVA):'')+' · spazio online non attivo', az:'Collega'}
     : {cls:'ok', t:'Memoria verificata · salvato'+(ULTIMO_SALVA?' '+oraBreve(ULTIMO_SALVA):'')
         +(STANDALONE?'':' · aggiungila alla Home'), az:STANDALONE?'':'Come'};
-  return {cls:'bad', t:'Attenzione: qui i dati potrebbero non restare', az:'Risolvi'};
+  return {cls:'bad', t:'Qui i dati non restano alla chiusura', az:'Risolvi'};
 }
 function aggiornaBadgeMemoria(){
   const el=document.getElementById('memLine'); if(!el) return;
