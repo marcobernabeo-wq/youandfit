@@ -1,0 +1,11 @@
+{
+  "name": "You and Fit",
+  "short_name": "You and Fit",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#08080A",
+  "theme_color": "#08080A",
+  "lang": "it"
+}
