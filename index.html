@@ -177,6 +177,16 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .statgrid div{background:var(--panel2);border:1px solid var(--line);border-radius:var(--rs);padding:9px 6px;text-align:center}
 .statgrid b{display:block;font-family:var(--disp);font-size:21px;color:var(--red-hi);line-height:1}
 .statgrid span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2)}
+.riferimento{background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--red);
+  border-radius:var(--rs);padding:9px 11px;margin-bottom:12px}
+.riferimento .eyebrow{letter-spacing:.12em;line-height:1.3}
+.riferimento .btn{white-space:nowrap;flex:0 0 auto;padding:6px 14px}
+.refserie{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.refpill{display:inline-flex;align-items:baseline;gap:4px;background:var(--ink);border:1px solid var(--line);
+  border-radius:999px;padding:4px 10px;font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
+.refpill b{font-family:var(--disp);font-size:11px;color:var(--muted2);font-weight:600}
+.refpill small{font-size:10px;color:var(--muted2);margin-left:-2px}
+.refpill.uguale{border-color:rgba(63,208,122,.45);color:var(--ok)}
 .setgrid{display:grid;grid-template-columns:34px 1fr 1fr 42px;gap:8px;align-items:center}
 .setgrid .hd{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);text-align:center;font-weight:600}
 .setno{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--red);color:var(--red-hi);display:grid;place-items:center;font-family:var(--disp);font-size:13px}
@@ -1037,16 +1047,30 @@ exec(){
     <div class="card">
       <div class="rowhead" style="margin-bottom:10px"><h3>Serie</h3>
         <span class="tiny muted">${e.serie.filter(s=>s.done).length}/${e.serie.length} fatte</span></div>
+      ${(()=>{ const u=ultimaVolta(e.nome); if(!u) return `<p class="tiny muted" style="margin:-2px 0 10px">
+          Prima volta che registri questo esercizio: i pesi di oggi diventano il riferimento.</p>`;
+        return `<div class="riferimento">
+          <div class="rowhead">
+            <span class="eyebrow">Ultima volta · ${esc(giorniFa(u.data))}</span>
+            <button class="btn soft sm" data-act="ripetiCarichi">Riprendi</button>
+          </div>
+          <div class="refserie">
+            ${u.serie.map((x,j)=>`<span class="refpill${(e.serie[j]&&String(e.serie[j].kg)===String(x.kg))?' uguale':''}">
+              <b>${j+1}</b> ${esc(String(x.kg||'—'))}<small>kg</small> × ${esc(String(x.rip||'—'))}</span>`).join('')}
+          </div>
+        </div>`; })()}
       <div class="setgrid" style="margin-bottom:6px">
         <span></span><span class="hd">Peso (kg)</span><span class="hd">Ripetizioni</span><span></span></div>
       <div class="stack">
-        ${e.serie.map((s,i)=>`<div class="setgrid ${s.done?'setdone':''}" data-set="${i}">
+        ${(()=>{ const u=ultimaVolta(e.nome); return e.serie.map((s,i)=>{
+          const p=u&&u.serie[i] ? u.serie[i] : null;
+          return `<div class="setgrid ${s.done?'setdone':''}" data-set="${i}">
           <span class="setno num">${i+1}</span>
-          <input type="number" inputmode="decimal" step="0.5" value="${s.kg??''}" placeholder="—" data-f="kg" data-i="${i}">
-          <input type="number" inputmode="numeric" value="${s.rip??''}" placeholder="${esc(String(e.rep).split('/')[0])}" data-f="rip" data-i="${i}">
+          <input type="number" inputmode="decimal" step="0.5" value="${s.kg??''}" placeholder="${p&&p.kg?esc(String(p.kg)):'—'}" data-f="kg" data-i="${i}">
+          <input type="number" inputmode="numeric" value="${s.rip??''}" placeholder="${p&&p.rip?esc(String(p.rip)):esc(String(e.rep).split('/')[0])}" data-f="rip" data-i="${i}">
           <button class="tick" data-act="toggleSet" data-i="${i}" aria-label="Serie ${i+1} completata">
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></button>
-        </div>`).join('')}
+        </div>`; }).join(''); })()}
       </div>
       <div class="row" style="margin-top:12px">
         ${c.retro?`<button class="btn ghost grow" data-act="compilaSerie" data-i="${c.idx}">Segna tutte le serie fatte</button>`
@@ -1116,6 +1140,20 @@ coachPlan(p){
 function fmtRec(s){ s=+s||0; if(s>=60 && s%60===0) return (s/60)+'m'; if(s>=60) return Math.floor(s/60)+'m'+(s%60)+'s'; return s+'s'; }
 function kcalOf(m){ return Math.round(m.c*4+m.p*4+m.f*9); }
 
+/* l'ultima volta che ho fatto questo esercizio con dei pesi segnati */
+function ultimaVolta(nome){
+  for(let i=DB.log.length-1;i>=0;i--){
+    const l=DB.log[i], e=l.esercizi.find(x=>x.nome===nome);
+    if(e && e.serie && e.serie.some(s=>s.kg)) return {data:l.data, blocco:l.blocco, serie:e.serie};
+  }
+  return null;
+}
+/* quanti giorni fa */
+function giorniFa(iso0){
+  const d=new Date(iso0+'T00:00:00'), oggi=new Date(); oggi.setHours(0,0,0,0);
+  const n=Math.round((oggi-d)/864e5);
+  return n<=0?'oggi':n===1?'ieri':n+' giorni fa';
+}
 function lastWeights(nome, full){
   const hits=[];
   for(let i=DB.log.length-1;i>=0 && hits.length<(full?3:1);i--){
@@ -2618,6 +2656,15 @@ delLog(t){
     <button class="btn grow" data-act="delLogGo" data-id="${l.id}">Elimina</button></div>`);
 },
 delLogGo(t){ DB.log=DB.log.filter(x=>x.id!==t.dataset.id); salvaOra(); closeModal(); render(); toast('Allenamento eliminato'); },
+ripetiCarichi(){
+  const c=DB.corrente, ex=c.esercizi[c.idx], u=ultimaVolta(ex.nome);
+  if(!u) return toast('Non ho uno storico per questo esercizio');
+  let n=0;
+  ex.serie.forEach((s,i)=>{ const p=u.serie[i]||u.serie[u.serie.length-1];
+    if(p && p.kg){ s.kg=p.kg; if(!s.rip) s.rip=p.rip||''; n++; } });
+  save(); render();
+  toast(n?`Ripresi i carichi del ${fmtData(u.data)}: correggili dove serve`:'Nessun peso da riprendere');
+},
 compilaSerie(){
   const ex=DB.corrente.esercizi[DB.corrente.idx];
   const primo=ex.serie.find(s=>s.kg);
@@ -2931,6 +2978,7 @@ preparaHome();
 aggiornaBadgeMemoria();
 Sync.init();
 </script>
+
 
 </body>
 </html>
