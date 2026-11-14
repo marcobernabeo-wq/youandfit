@@ -2024,18 +2024,23 @@ function pannelloGuida(nome){
 
 /* ---------- vista guida esercizio a tutta pagina ---------- */
 VIEWS.esercizio=function(p){
-  const nome=p.nome||'', F=famigliaOf(nome);
+  const nome=p.nome||'', F=famigliaOf(nome), vid=videoDi(nome);
   return `<div class="view">
     <div class="exhead">
       <div class="eyebrow">${esc(F.nome)}</div>
       <h2 style="margin-top:4px">${esc(nome)}</h2>
       <div class="pillrow">
-        <a class="pill" href="${ytLink(nome)}" target="_blank" rel="noopener">Esecuzione ${ICO_PLAY}</a>
+        ${vid
+          ? `<a class="pill coach" href="${esc(vid)}" target="_blank" rel="noopener">Video del coach ${ICO_PLAY}</a>`
+          : `<a class="pill" href="${ytLink(nome)}" target="_blank" rel="noopener">Cerca su YouTube ${ICO_PLAY}</a>`}
       </div>
     </div>
     ${pannelloGuida(nome)}
     ${lastWeights(nome,true)?`<div class="card">${lastWeights(nome,true)}</div>`:''}
-    <p class="tiny muted">Il pulsante Esecuzione apre una ricerca video su YouTube, fuori dall'app. Le indicazioni sono di tecnica generale: se senti dolore o hai dubbi, fatti seguire da un istruttore in sala.</p>
+    <p class="tiny muted">${vid
+      ? 'Il pulsante apre il video che ti ha caricato il coach, su YouTube.'
+      : 'Per questo esercizio il coach non ha allegato un video: il pulsante apre una ricerca su YouTube.'}
+      Le indicazioni qui sotto sono di tecnica generale: se senti dolore o hai dubbi, fatti seguire da un istruttore in sala.</p>
   </div>`;
 };
 </script>
